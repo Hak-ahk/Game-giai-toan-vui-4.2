@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Math Quiz Game</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome for icons (if needed, though we'll use emojis/SVGs) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(to right bottom, #6a11cb, #2575fc); /* Attractive gradient background */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            overflow: hidden; /* Prevent scroll for fireworks */
+        }
+
+        .game-container {
+            background-color: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+            padding: 30px;
+            width: 90%;
+            max-width: 800px;
+            text-align: center;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            animation: fadeIn 1s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .question-box {
+            background-color: #f0f9ff; /* Light blue background */
+            border: 2px solid #bfdbfe; /* Blue border */
+            border-radius: 15px;
+            padding: 25px;
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #1a202c;
+            min-height: 120px; /* Ensure consistent height */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); /* Adjusted minmax for smaller buttons */
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .option-button {
+            background-color: #e0f2fe; /* Lighter blue */
+            color: #1e40af; /* Darker blue text */
+            padding: 12px 20px; /* Reduced padding for smaller buttons */
+            border-radius: 12px;
+            font-size: 1.3rem; /* Increased font size */
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid #93c5fd; /* Blue border */
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            min-height: 60px; /* Adjusted min-height */
+        }
+
+        .option-button:hover {
+            background-color: #bfdbfe; /* Slightly darker on hover */
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .option-button:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .option-button.correct {
+            background-color: #d1fae5; /* Light green for correct */
+            border-color: #34d399; /* Green border */
+            color: #065f46; /* Dark green text */
+            animation: flashCorrect 0.5s ease-out;
+        }
+
+        .option-button.incorrect {
+            background-color: #fee2e2; /* Light red for incorrect */
+            border-color: #ef4444; /* Red border */
+            color: #991b1b; /* Dark red text */
+            animation: shake 0.3s ease-in-out;
+        }
+
+        @keyframes flashCorrect {
+            0% { background-color: #d1fae5; }
+            50% { background-color: #a7f3d0; }
+            100% { background-color: #d1fae5; }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-5px); }
+            40%, 80% { transform: translateX(5px); }
+        }
+
+        .message-box {
+            background-color: #fff;
+            padding: 15px 25px;
+            border-radius: 10px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #333;
+            margin-top: 20px;
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+
+        .message-box.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .control-button {
+            background: linear-gradient(to right, #4ade80, #22c55e); /* Green gradient */
+            color: white;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: none;
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+            position: relative;
+            overflow: visible; /* Allow hint text to overflow */
+        }
+
+        .control-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .control-button:active {
+            transform: translateY(0);
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
+        }
+
+        .control-button.reset {
+            background: linear-gradient(to right, #f87171, #ef4444); /* Red gradient */
+        }
+        .control-button.hint {
+            background: linear-gradient(to right, #60a5fa, #3b82f6); /* Blue gradient */
+        }
+
+        .hint-text {
+            position: absolute;
+            bottom: calc(100% + 10px); /* Position slightly above the button, add some space */
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(0, 0, 0, 0.9); /* Slightly darker for better contrast */
+            color: white;
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            text-align: center; /* Center the text */
+            max-width: 250px; /* Limit width to prevent overflow */
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+            z-index: 10;
+            pointer-events: none; /* Allow clicks to pass through */
+        }
+
+        /* New rule for showing hint text */
+        .hint-text.show-hint {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        #fireworks-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none; /* Allows interaction with elements behind the canvas */
+            z-index: 9999; /* Ensure it's on top */
+        }
+
+        .start-screen {
+            background-color: rgba(255, 255, 255, 0.98);
+            border-radius: 20px;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+            padding: 50px;
+            width: 90%;
+            max-width: 600px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+            animation: fadeIn 1s ease-out;
+        }
+
+        .start-screen h1 {
+            font-size: 3rem;
+            font-weight: 700;
+            color: #2575fc;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .start-screen p {
+            font-size: 1.2rem;
+            color: #4a5568;
+            line-height: 1.6;
+        }
+
+        .start-button {
+            background: linear-gradient(to right, #22c55e, #10b981); /* Green gradient */
+            color: white;
+            padding: 20px 40px;
+            border-radius: 15px;
+            font-size: 1.5rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: none;
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .start-button:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .start-button:active {
+            transform: translateY(0);
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .game-container, .start-screen {
+                padding: 20px;
+                width: 95%;
+            }
+            .question-box {
+                font-size: 1.2rem;
+                padding: 15px;
+                min-height: 100px;
+            }
+            .options-grid {
+                grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); /* Further adjustment for smaller screens */
+            }
+            .option-button {
+                font-size: 1.1rem; /* Adjusted font size for mobile */
+                padding: 10px 15px; /* Adjusted padding for mobile */
+                min-height: 50px;
+            }
+            .controls {
+                flex-direction: column;
+                gap: 10px;
+            }
+            .control-button {
+                width: 100%;
+                padding: 12px 20px;
+            }
+            .start-screen h1 {
+                font-size: 2.5rem;
+            }
+            .start-screen p {
+                font-size: 1rem;
+            }
+            .start-button {
+                padding: 15px 30px;
+                font-size: 1.2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="start-screen" class="start-screen">
+        <h1>Chào mừng đến với Trò chơi Đố vui Toán học!</h1>
+        <p>Kiểm tra kỹ năng giải toán của bạn với một loạt các bài toán đố vui nhộn và thử thách. Nhấn nút "Bắt đầu" để bắt đầu cuộc phiêu lưu của bạn!</p>
+        <button id="start-game-button" class="start-button">Bắt đầu</button>
+    </div>
+
+    <div id="game-container" class="game-container hidden">
+        <div class="header">
+            <div class="text-xl font-bold text-blue-700">Câu hỏi: <span id="question-count">0/0</span></div>
+            <div class="text-xl font-bold text-green-700">Điểm: <span id="score">0/0</span></div>
+        </div>
+
+        <div id="question-text" class="question-box">
+            <!-- Question will be loaded here -->
+        </div>
+
+        <div id="options-container" class="options-grid">
+            <!-- Options will be loaded here -->
+        </div>
+
+        <div id="message-box" class="message-box">
+            <!-- Feedback messages will appear here -->
+        </div>
+
+        <div class="controls">
+            <button id="hint-button" class="control-button hint">
+                Gợi ý
+                <span id="hint-text" class="hint-text"></span>
+            </button>
+            <button id="reset-game-button" class="control-button reset">Chơi lại</button>
+        </div>
+    </div>
+
+    <canvas id="fireworks-canvas"></canvas>
+
+    <script>
+        // Data for questions
+        const questions = [
+            {
+                question: "Tom buys 5 pizzas. Each pizza has 8 slices. How many slices does he have?",
+                options: ["30", "35", "40", "45"],
+                correct: "40",
+                hint: "Tom mua 5 cái pizza. Mỗi cái có 8 lát. Anh ấy có bao nhiêu lát?",
+            },
+            {
+                question: "Anna buys 3 cakes. Each cake costs 12 dollars. How much does she pay?",
+                options: ["34", "35", "36", "37"],
+                correct: "36",
+                hint: "Anna mua 3 cái bánh. Mỗi cái bánh giá 12 đô la. Cô ấy phải trả bao nhiêu?",
+            },
+            {
+                question: "A banana costs 2 dollars. Bob buys 10 bananas for his pet monkey. How much?",
+                options: ["15", "18", "20", "22"],
+                correct: "20",
+                hint: "Một quả chuối giá 2 đô la. Bob mua 10 quả chuối cho con khỉ cưng của mình. Hết bao nhiêu?",
+            },
+            {
+                question: "Jenny has 50 candies. She eats 12. How many candies are left?",
+                options: ["36", "37", "38", "39"],
+                correct: "38", // Corrected based on 50 - 12 = 38
+                hint: "Jenny có 50 viên kẹo. Cô ấy ăn 12 viên. Còn lại bao nhiêu viên kẹo?",
+            },
+            {
+                question: "A burger costs 5 dollars. Tim buys 4 burgers for lunch. How much does he pay?",
+                options: ["15", "20", "25", "30"],
+                correct: "20",
+                hint: "Một cái burger giá 5 đô la. Tim mua 4 cái burger cho bữa trưa. Anh ấy phải trả bao nhiêu?",
+            },
+            {
+                question: "Mike buys 6 hotdogs. Each hotdog has 2 sausages. How many sausages in total?",
+                options: ["10", "11", "12", "13"],
+                correct: "12",
+                hint: "Mike mua 6 cái hotdog. Mỗi cái hotdog có 2 cái xúc xích. Tổng cộng có bao nhiêu cái xúc xích?",
+            },
+            {
+                question: "A donut costs 3 dollars. Lily buys 9 donuts. How much does she pay?",
+                options: ["26", "27", "28", "29"],
+                correct: "27",
+                hint: "Một cái bánh donut giá 3 đô la. Lily mua 9 cái bánh donut. Cô ấy phải trả bao nhiêu?",
+            },
+            {
+                question: "Ben has 100 cookies. He gives 45 to his friends. How many cookies are left?",
+                options: ["54", "55", "56", "57"],
+                correct: "55",
+                hint: "Ben có 100 cái bánh quy. Anh ấy cho bạn bè 45 cái. Còn lại bao nhiêu cái bánh quy?",
+            },
+            {
+                question: "A watermelon weighs 5 kg. John buys 3 watermelons. How heavy are they?",
+                options: ["10 kg", "12 kg", "15 kg", "18 kg"],
+                correct: "15 kg",
+                hint: "Một quả dưa hấu nặng 5 kg. John mua 3 quả dưa hấu. Chúng nặng bao nhiêu?",
+            },
+            {
+                question: "Alice buys 7 cups of bubble tea. Each costs 4 dollars. How much in total?",
+                options: ["28", "29", "30", "31"],
+                correct: "28",
+                hint: "Alice mua 7 ly trà sữa trân châu. Mỗi ly giá 4 đô la. Tổng cộng bao nhiêu?",
+            },
+            {
+                question: "There are 20 students. Each student has 3 pencils. How many pencils in total?",
+                options: ["59", "60", "61", "62"],
+                correct: "60",
+                hint: "Có 20 học sinh. Mỗi học sinh có 3 cây bút chì. Tổng cộng có bao nhiêu cây bút chì?",
+            },
+            {
+                question: "The school has 5 classrooms. Each has 8 windows. How many windows?",
+                options: ["38", "39", "40", "41"],
+                correct: "40",
+                hint: "Trường học có 5 phòng học. Mỗi phòng có 8 cửa sổ. Có bao nhiêu cửa sổ?",
+            },
+            {
+                question: "A teacher brings 48 candies. She shares them equally to 8 students. How many candies per student?",
+                options: ["5", "6", "7", "8"],
+                correct: "6",
+                hint: "Một giáo viên mang 48 viên kẹo. Cô ấy chia đều cho 8 học sinh. Mỗi học sinh có bao nhiêu viên kẹo?",
+            },
+            {
+                question: "A book costs 15 dollars. A pen costs 5 dollars. How much for both?",
+                options: ["18", "19", "20", "21"],
+                correct: "20",
+                hint: "Một cuốn sách giá 15 đô la. Một cây bút giá 5 đô la. Cả hai hết bao nhiêu?",
+            },
+            {
+                question: "There are 6 tables. Each table has 4 chairs. How many chairs in total?",
+                options: ["23", "24", "25", "26"],
+                correct: "24",
+                hint: "Có 6 cái bàn. Mỗi bàn có 4 cái ghế. Tổng cộng có bao nhiêu cái ghế?",
+            },
+            {
+                question: "Bob has 30 marbles. He loses 12 marbles at recess. How many are left?",
+                options: ["16", "17", "18", "19"],
+                correct: "18",
+                hint: "Bob có 30 viên bi. Anh ấy làm mất 12 viên bi trong giờ giải lao. Còn lại bao nhiêu viên?",
+            },
+            {
+                question: "The school bus carries 40 students in the morning and 35 in the afternoon. How many students in total?",
+                options: ["74", "75", "76", "77"],
+                correct: "75",
+                hint: "Xe buýt trường học chở 40 học sinh vào buổi sáng và 35 học sinh vào buổi chiều. Tổng cộng có bao nhiêu học sinh?",
+            },
+            {
+                question: "A pencil box costs 8 dollars. Sam buys 5 boxes. How much?",
+                options: ["38", "39", "40", "41"],
+                correct: "40",
+                hint: "Một hộp bút chì giá 8 đô la. Sam mua 5 hộp. Hết bao nhiêu?",
+            },
+            {
+                question: "The library has 200 books. 55 are borrowed. How many books are left?",
+                options: ["144", "145", "146", "147"],
+                correct: "145",
+                hint: "Thư viện có 200 cuốn sách. 55 cuốn đã được mượn. Còn lại bao nhiêu cuốn sách?",
+            },
+            {
+                question: "3 baskets have 12 apples each. How many apples in total?",
+                options: ["34", "35", "36", "37"],
+                correct: "36",
+                hint: "3 cái giỏ có 12 quả táo mỗi giỏ. Tổng cộng có bao nhiêu quả táo?",
+            },
+            {
+                question: "A cat eats 2 fish a day. How many fish in 7 days?",
+                options: ["13", "14", "15", "16"],
+                correct: "14",
+                hint: "Một con mèo ăn 2 con cá mỗi ngày. Ăn bao nhiêu con cá trong 7 ngày?",
+            },
+            {
+                question: "A dog has 4 legs. How many legs do 8 dogs have?",
+                options: ["30", "31", "32", "33"],
+                correct: "32",
+                hint: "Một con chó có 4 chân. 8 con chó có bao nhiêu chân?",
+            },
+            {
+                question: "5 birds sit on a tree. 3 more birds join. How many birds now?",
+                options: ["7", "8", "9", "10"],
+                correct: "8",
+                hint: "5 con chim đậu trên cây. 3 con chim nữa bay đến. Bây giờ có bao nhiêu con chim?",
+            },
+            {
+                question: "A soccer team has 11 players. How many players in 3 teams?",
+                options: ["32", "33", "34", "35"],
+                correct: "33",
+                hint: "Một đội bóng đá có 11 cầu thủ. 3 đội có bao nhiêu cầu thủ?",
+            },
+            {
+                question: "Each basketball match lasts 30 minutes. How many minutes in 4 matches?",
+                options: ["100", "110", "120", "130"],
+                correct: "120",
+                hint: "Mỗi trận đấu bóng rổ kéo dài 30 phút. Tổng cộng bao nhiêu phút trong 4 trận đấu?",
+            },
+            {
+                question: "6 rabbits eat 5 carrots each. How many carrots in total?",
+                options: ["28", "29", "30", "31"],
+                correct: "30",
+                hint: "6 con thỏ ăn 5 củ cà rốt mỗi con. Tổng cộng bao nhiêu củ cà rốt?",
+            },
+            {
+                question: "A fish tank has 15 fish. 5 fish are sold. How many left?",
+                options: ["9", "10", "11", "12"],
+                correct: "10",
+                hint: "Một bể cá có 15 con cá. 5 con cá được bán. Còn lại bao nhiêu con?",
+            },
+            {
+                question: "Each player has 2 shoes. How many shoes for 9 players?",
+                options: ["17", "18", "19", "20"],
+                correct: "18",
+                hint: "Mỗi cầu thủ có 2 chiếc giày. 9 cầu thủ có bao nhiêu chiếc giày?",
+            },
+            {
+                question: "A horse runs 5 km every day. How far in 6 days?",
+                options: ["28 km", "29 km", "30 km", "31 km"],
+                correct: "30 km",
+                hint: "Một con ngựa chạy 5 km mỗi ngày. Chạy được bao xa trong 6 ngày?",
+            },
+            {
+                question: "A clown throws 10 pies. 4 pies hit the target. How many pies miss?",
+                options: ["5", "6", "7", "8"],
+                correct: "6",
+                hint: "Một chú hề ném 10 cái bánh. 4 cái bánh trúng mục tiêu. Có bao nhiêu cái bánh trượt mục tiêu?",
+            },
+        ];
+
+        let shuffledQuestions = [];
+        let currentQuestionIndex = 0;
+        let score = 0;
+        const answeredQuestions = new Set(); // Để theo dõi các câu hỏi đã được tính điểm (chỉ khi trả lời đúng lần đầu)
+        let currentQuestionAttempted = false; // Cờ để theo dõi xem câu hỏi hiện tại đã được thử (cho logic tính điểm)
+
+
+        const startScreen = document.getElementById('start-screen');
+        const gameContainer = document.getElementById('game-container');
+        const startGameButton = document.getElementById('start-game-button');
+        const questionText = document.getElementById('question-text');
+        const optionsContainer = document.getElementById('options-container');
+        const messageBox = document.getElementById('message-box');
+        const questionCountSpan = document.getElementById('question-count');
+        const scoreSpan = document.getElementById('score');
+        const hintButton = document.getElementById('hint-button');
+        const hintText = document.getElementById('hint-text');
+        const resetButton = document.getElementById('reset-game-button');
+        const fireworksCanvas = document.getElementById('fireworks-canvas');
+        const ctx = fireworksCanvas.getContext('2d');
+
+        // Speech Synthesis setup
+        const synth = window.speechSynthesis;
+        let utterance = new SpeechSynthesisUtterance();
+        utterance.lang = 'en-US'; // Set language to English
+
+        // Fireworks settings
+        let particles = [];
+        const FIREWORK_COLORS = ['#ff0000', '#ff7f00', '#ffff00', '#00ff00', '#0000ff', '#4b0082', '#9400d3'];
+
+        // --- Audio Functions (Web Audio API) ---
+
+        // Function to play a correct sound (short high-pitched beep)
+        function playCorrectFeedback(message) {
+            const feedbackUtterance = new SpeechSynthesisUtterance(message);
+            feedbackUtterance.lang = 'en-US';
+            synth.speak(feedbackUtterance);
+        }
+
+        // Function to play an incorrect sound (short low-pitched beep)
+        function playIncorrectFeedback(message) {
+            const feedbackUtterance = new SpeechSynthesisUtterance(message);
+            feedbackUtterance.lang = 'en-US';
+            synth.speak(feedbackUtterance);
+        }
+
+        // --- Game Logic Functions ---
+
+        // Fisher-Yates (Knuth) shuffle algorithm
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]]; // Swap elements
+            }
+            return array;
+        }
+
+        function startGame() {
+            startScreen.classList.add('hidden');
+            gameContainer.classList.remove('hidden');
+            resetGame(); // Call reset to initialize and shuffle
+        }
+
+        function resetGame() {
+            shuffledQuestions = shuffleArray([...questions]); // Create a shuffled copy
+            currentQuestionIndex = 0;
+            score = 0;
+            answeredQuestions.clear(); // Clear previously answered questions (for scoring)
+            currentQuestionAttempted = false; // Reset attempt flag for the new game
+            updateScoreAndCount();
+            displayQuestion();
+            hideMessageBox();
+            // Clear any active fireworks
+            particles = [];
+        }
+
+        function updateScoreAndCount() {
+            // Cập nhật hiển thị điểm số hiện tại trên tổng số câu hỏi
+            scoreSpan.textContent = `${score}/${shuffledQuestions.length}`;
+            // Cập nhật hiển thị số câu hỏi
+            questionCountSpan.textContent = `${currentQuestionIndex + 1}/${shuffledQuestions.length}`;
+            if (currentQuestionIndex >= shuffledQuestions.length) {
+                // Khi trò chơi kết thúc, đảm bảo số câu hỏi hiển thị tổng số
+                questionCountSpan.textContent = `${shuffledQuestions.length}/${shuffledQuestions.length}`;
+            }
+        }
+
+        function displayQuestion() {
+            if (currentQuestionIndex >= shuffledQuestions.length) {
+                showMessageBox("Bạn đã hoàn thành trò chơi! Điểm cuối cùng của bạn là " + score + "/" + shuffledQuestions.length + ".");
+                questionText.textContent = "Trò chơi kết thúc!";
+                optionsContainer.innerHTML = ''; // Clear options
+                return;
+            }
+
+            const currentQuestion = shuffledQuestions[currentQuestionIndex];
+            questionText.textContent = currentQuestion.question;
+            optionsContainer.innerHTML = '';
+            hideMessageBox();
+            currentQuestionAttempted = false; // Reset for a new question
+
+            // Read the question aloud
+            utterance.text = currentQuestion.question;
+            synth.speak(utterance);
+
+            currentQuestion.options.forEach(option => {
+                const button = document.createElement('button');
+                button.textContent = option;
+                button.classList.add('option-button');
+                button.addEventListener('click', () => checkAnswer(button, option, currentQuestion));
+                optionsContainer.appendChild(button);
+            });
+
+            // Update hint text
+            hintText.textContent = currentQuestion.hint;
+        }
+
+        function checkAnswer(selectedButton, selectedOption, currentQuestion) {
+            // Disable all option buttons to prevent multiple clicks
+            Array.from(optionsContainer.children).forEach(button => {
+                button.style.pointerEvents = 'none';
+            });
+
+            if (selectedOption === currentQuestion.correct) {
+                const feedbackMessages = ["Well done!", "Great!", "Good job!"];
+                const randomMessage = feedbackMessages[Math.floor(Math.random() * feedbackMessages.length)];
+                playCorrectFeedback(randomMessage); // Play spoken feedback
+                selectedButton.classList.add('correct');
+                showMessageBox(randomMessage);
+
+                // Add score only if this question hasn't been answered correctly before (first attempt)
+                if (!answeredQuestions.has(currentQuestion.question) && !currentQuestionAttempted) {
+                    score++;
+                    answeredQuestions.add(currentQuestion.question); // Mark as scored
+                }
+                updateScoreAndCount();
+
+                // Trigger fireworks from the correct button's position
+                const rect = selectedButton.getBoundingClientRect();
+                createFirework(rect.left + rect.width / 2, rect.top + rect.height / 2);
+
+                setTimeout(() => {
+                    currentQuestionIndex++;
+                    displayQuestion();
+                    // Re-enable buttons for the next question
+                    Array.from(optionsContainer.children).forEach(button => {
+                        button.style.pointerEvents = 'auto';
+                    });
+                }, 1500); // Wait for feedback and fireworks
+            } else {
+                playIncorrectFeedback("Try again!"); // Play spoken feedback
+                selectedButton.classList.add('incorrect');
+                showMessageBox("Try again!");
+                currentQuestionAttempted = true; // Mark that this question has been attempted (incorrectly)
+
+                setTimeout(() => {
+                    selectedButton.classList.remove('incorrect');
+                    hideMessageBox();
+                    // Re-enable buttons after incorrect attempt
+                    Array.from(optionsContainer.children).forEach(button => {
+                        button.style.pointerEvents = 'auto';
+                    });
+                }, 1000);
+            }
+        }
+
+        function showMessageBox(message) {
+            messageBox.textContent = message;
+            messageBox.classList.add('show');
+        }
+
+        function hideMessageBox() {
+            messageBox.classList.remove('show');
+        }
+
+        // --- Fireworks Animation ---
+
+        function resizeCanvas() {
+            fireworksCanvas.width = window.innerWidth;
+            fireworksCanvas.height = window.innerHeight;
+        }
+
+        class Particle {
+            constructor(x, y, color) {
+                this.x = x;
+                this.y = y;
+                this.color = color;
+                this.radius = Math.random() * 2 + 1;
+                this.velocity = {
+                    x: (Math.random() - 0.5) * 8,
+                    y: (Math.random() - 0.5) * 8
+                };
+                this.alpha = 1;
+                this.friction = 0.95;
+                this.gravity = 0.2;
+            }
+
+            draw() {
+                ctx.save();
+                ctx.globalAlpha = this.alpha;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2, false);
+                ctx.fillStyle = this.color;
+                ctx.fill();
+                ctx.restore();
+            }
+
+            update() {
+                this.velocity.x *= this.friction;
+                this.velocity.y *= this.friction;
+                this.velocity.y += this.gravity;
+                this.x += this.velocity.x;
+                this.y += this.velocity.y;
+                this.alpha -= 0.015;
+            }
+        }
+
+        function createFirework(x, y) {
+            const particleCount = 50;
+            const color = FIREWORK_COLORS[Math.floor(Math.random() * FIREWORK_COLORS.length)];
+            for (let i = 0; i < particleCount; i++) {
+                particles.push(new Particle(x, y, color));
+            }
+        }
+
+        function animateFireworks() {
+            requestAnimationFrame(animateFireworks);
+            ctx.clearRect(0, 0, fireworksCanvas.width, fireworksCanvas.height);
+
+            for (let i = particles.length - 1; i >= 0; i--) {
+                const p = particles[i];
+                p.update();
+                p.draw();
+
+                if (p.alpha <= 0.1 || p.radius <= 0.5) {
+                    particles.splice(i, 1);
+                }
+            }
+        }
+
+        // --- Event Listeners ---
+        startGameButton.addEventListener('click', startGame);
+        resetButton.addEventListener('click', resetGame);
+
+        // Hint button logic
+        hintButton.addEventListener('mousedown', () => {
+            hintText.classList.add('show-hint'); // Add show-hint class to the hint text
+        });
+
+        hintButton.addEventListener('mouseup', () => {
+            hintText.classList.remove('show-hint'); // Remove show-hint class from the hint text
+        });
+
+        // For touch devices
+        hintButton.addEventListener('touchstart', (e) => {
+            e.preventDefault(); // Prevent default touch behavior like scrolling
+            hintText.classList.add('show-hint'); // Add show-hint class to the hint text
+        }, { passive: false });
+
+        hintButton.addEventListener('touchend', () => {
+            hintText.classList.remove('show-hint'); // Remove show-hint class from the hint text
+        });
+
+        // Initial setup
+        window.addEventListener('load', () => {
+            resizeCanvas();
+            animateFireworks();
+        });
+        window.addEventListener('resize', resizeCanvas);
+
+    </script>
+</body>
+</html>
